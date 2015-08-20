@@ -28,23 +28,33 @@ public class Main {
 			int count = 0;
 			for (Digraph graph : readFile(args[0])) {
 				System.out.println("=== Graph #" + count++ + " ===");
-				PeaFindScc1.Recursive pscc = new PeaFindScc1.Recursive(graph);
-				for (HashSet<Integer> component : pscc.visit()) {
-					System.out.print("{");
-					boolean firstTime = true;
-					for (Integer i : component) {
-						if (!firstTime) {
-							System.out.print(",");
-						}
-						firstTime = false;
-						System.out.print(i);
-					}
-					System.out.print("}");
+				PeaFindScc1.Recursive r_pscc = new PeaFindScc1.Recursive(graph);
+				PeaFindScc1.Imperative i_pscc = new PeaFindScc1.Imperative(graph);
+				HashSet<Integer>[] r_components = r_pscc.visit();
+				HashSet<Integer>[] i_components = i_pscc.visit();
+				if(!Arrays.equals(r_components,i_components)) {
+					System.out.println("*** DIFFERENCE DETECTED!!!");
+				}
+				for (HashSet<Integer> component : r_components) {
+					printComponent(component);
 				}
 				System.out.println();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public static void printComponent(HashSet<Integer> component) {
+		System.out.print("{");
+		boolean firstTime = true;
+		for (Integer i : component) {
+			if (!firstTime) {
+				System.out.print(",");
+			}
+			firstTime = false;
+			System.out.print(i);
+		}
+		System.out.print("}");
 	}
 }
