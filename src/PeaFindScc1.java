@@ -1,5 +1,4 @@
 import java.util.HashSet;
-import java.util.Stack;
 
 /**
  * Two example implementations of an algorithm for finding strongly connected
@@ -52,7 +51,7 @@ public class PeaFindScc1 {
 
 			if (root) {
 				inComponent[v] = true;
-				while (!S.isEmpty() && rindex[v] <= rindex[S.peek()]) {
+				while (!S.isEmpty() && rindex[v] <= rindex[S.top()]) {
 					int w = S.pop();
 					rindex[w] = c;
 					inComponent[w] = true;
@@ -76,45 +75,68 @@ public class PeaFindScc1 {
 	 *
 	 */
 	public static class Imperative extends Base {
-
+		
 		public Imperative(Digraph g) {
 			super(g);
+			
 		}
 
 		public void visit(int v) {
-			// Represents the call stack
-			int[] stack = new int[graph.size()];
-			int sp = push(stack,0,v);
+			// Represents the call stack			
+			Stack vS = new Stack(graph.size());         // n words
+			Stack iS = new Stack(graph.size());         // n words
+			boolean[] root = new boolean[graph.size()]; // n bits
+			vS.push(v);                          // total: n(1 + 2w)
+			iS.push(0);
 			
-			while (sp > 0) {
-				sp = visit(stack,sp);
+			while (!vS.isEmpty()) {
+				visit(vS,iS,root);
 			}
-			System.out.println("DONE");
 		}
 		
-		public int visit(int[] stack, int sp) {
-			System.out.println("VISITING");
-			int v = top(stack,sp);
-			boolean root = true;
-			visited[v] = true;
-			rindex[v] = index;
-			index = index + 1;
-			inComponent[v] = false;
-
-			for (int w : graph.edges(v)) {
-				if (!visited[w]) {
-					// BROKEN HERE ... need to be able to continue!
-					return push(stack,sp,w);
-				}
-				if (!inComponent[w] && rindex[w] < rindex[v]) {
-					rindex[v] = rindex[w];
-					root = false;
-				}
+		public void visit(Stack vS, Stack iS, boolean[] root) {			
+			int v = vS.top();
+			int i = iS.top();
+			
+			int[] g_edges = graph.edges(v); 
+			
+			if(i == 0) {
+				// First time this node encountered			
+				root[v] = true;
+				visited[v] = true;
+				rindex[v] = index;
+				index = index + 1;
+				inComponent[v] = false;				
+			} 
+			
+			// Continue traversing out-edges until none left.
+			while(i <= g_edges.length){			
+				// Continuation
+				if(i > 0) {
+					// Update status for previously traversed out-edge
+					int ow = g_edges[i-1];
+					if (!inComponent[ow] && rindex[ow] < rindex[v]) {
+						rindex[v] = rindex[ow];
+						root[v] = false;
+					}
+				} 				
+				if (i < g_edges.length) {
+					int w = g_edges[i];					
+					if (!visited[w]) {
+						iS.pop();
+						iS.push(i+1);
+						vS.push(w);
+						iS.push(0);
+						return;
+					}
+				} 
+				i = i + 1;				
 			}
-
-			if (root) {
+			
+			// Finished traversing out edges, update component info
+			if (root[v]) {
 				inComponent[v] = true;
-				while (!S.isEmpty() && rindex[v] <= rindex[S.peek()]) {
+				while (!S.isEmpty() && rindex[v] <= rindex[S.top()]) {
 					int w = S.pop();
 					rindex[w] = c;
 					inComponent[w] = true;
@@ -123,51 +145,12 @@ public class PeaFindScc1 {
 				c = c + 1;
 			} else {
 				S.push(v);
-			}
+			}					
 
-			return pop(stack,sp);
+			// Take this vertex off the stack
+			vS.pop();
+			iS.pop();		
 		}
-	}
-
-	/**
-	 * Get top item on the stack
-	 * 
-	 * @param stack
-	 *            --- stack itself, with bottom being at index 0
-	 * @param sp
-	 *            --- stack pointer, which identifies first unused slot.
-	 * @return
-	 */
-	private static int top(int[] stack, int sp) {
-		return stack[sp-1];
-	}
-	
-	/**
-	 * Pop an item from the stack
-	 * 
-	 * @param stack
-	 *            --- stack itself, with bottom being at index 0
-	 * @param sp
-	 *            --- stack pointer, which identifies first unused slot.
-	 * @return
-	 */
-	private static int pop(int[] stack, int sp) {
-		return sp - 1;
-	}
-	
-	/**
-	 * Push an item onto the stack
-	 * 
-	 * @param stack
-	 *            --- stack itself, with bottom being at index 0
-	 * @param sp
-	 *            --- stack pointer, which identifies first unused slot.
-	 * @param item
-	 * @return
-	 */
-	private static int push(int[] stack, int sp, int item) {
-		stack[sp] = item;
-		return sp + 1;
 	}
 	
 	// ==============================================================
@@ -185,17 +168,17 @@ public class PeaFindScc1 {
 		protected boolean[] visited;
 		protected boolean[] inComponent;
 		protected int[] rindex;
-		protected Stack<Integer> S;
+		protected Stack S;
 		protected int index;
 		protected int c; // component number
 
 		public Base(Digraph g) {
 			this.graph = g;
-			this.visited = new boolean[g.size()];
-			this.inComponent = new boolean[g.size()];
-			this.rindex = new int[g.size()];
-			this.S = new Stack();
-			this.index = 0;
+			this.visited = new boolean[g.size()];     // n bits
+			this.inComponent = new boolean[g.size()]; // n bits
+			this.rindex = new int[g.size()];          // n words
+			this.S = new Stack(g.size());             // n words
+			this.index = 0;                    // total: n(2 + 2w)
 			this.c = 0;
 		}
 
@@ -227,4 +210,55 @@ public class PeaFindScc1 {
 
 		public abstract void visit(int v);
 	}
+	
+	
+	
+	// ==============================================================
+	// Stack Implementation
+	// ==============================================================
+	
+	public static class Stack {
+		private final int[] items;
+		private int length;
+		
+		public Stack(int capacity) {
+			this.length = 0;
+			this.items = new int[capacity];
+		}
+		
+		public boolean isEmpty() {
+			return length == 0;
+		}
+		
+		/**
+		 * Get top item on the stack
+		 * 
+		 * @return
+		 */
+		public int top() {
+			return items[length-1];
+		}
+
+		/**
+		 * Pop item off stack
+		 * 
+		 * @return
+		 */
+		public int pop() {
+			length = length-1;
+			return items[length];
+		}
+
+		/**
+		 * Push an item onto the stack
+		 * 
+		 * @param item
+		 * @return
+		 */
+		public void push(int item) {
+			items[length] = item;
+			length = length + 1;			
+		}
+	}
+	
 }

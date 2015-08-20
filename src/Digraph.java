@@ -1,6 +1,5 @@
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Collection;
 
 /**
  * Simple representation of directed graph
@@ -9,20 +8,14 @@ import java.util.Set;
  *
  */
 public class Digraph {
-	private final ArrayList<HashSet<Integer>> edges;
+	private final int[][] edges;
 	private int nedges = 0;
 
-	public Digraph() {
-		edges = new ArrayList();
-	}
-
-	public void add(int from, int to) {
-		while (from >= edges.size() || to >= edges.size()) {
-			edges.add(new HashSet());
-		}
-
-		if (edges.get(from).add(to)) {
-			nedges++;
+	public Digraph(Collection<Edge> edges) {
+		int n = max(edges);		
+		this.edges = new int[n][];
+		for(int i=0;i!=n;++i) {
+			this.edges[i] = edges(edges,i);
 		}
 	}
 
@@ -31,19 +24,54 @@ public class Digraph {
 	}
 
 	public int size() {
-		return edges.size();
+		return edges.length;
 	}
 
-	public Set<Integer> edges(int v) {
-		return edges.get(v);
+	public int[] edges(int v) {
+		return edges[v];
 	}
 
 	public String toString() {
 		String r = "";
-		for (int i = 0; i != edges.size(); ++i) {
-			for (int j : edges.get(i)) {
+		for (int i = 0; i != edges.length; ++i) {
+			for (int j : edges[i]) {
 				r += i + "->" + j + " ";
 			}
+		}
+		return r;
+	}
+	
+	public static class Edge {
+		public final int from;
+		public final int to;
+		
+		public Edge(int from, int to) {
+			this.from = from;
+			this.to = to;
+		}
+	}
+	
+	// =============================================
+
+	private static int[] edges(Collection<Edge> edges, int index) {
+		ArrayList<Edge> i_edges = new ArrayList<Edge>();
+		for (Edge e : edges) {
+			if (e.from == index) {
+				i_edges.add(e);
+			}
+		}
+		int[] r = new int[i_edges.size()];
+		for (int i = 0; i != i_edges.size(); ++i) {
+			r[i] = i_edges.get(i).to;
+		}
+		return r;
+	}
+	
+	private static int max(Collection<Edge> edges) {
+		int r = 0;
+		for(Edge e : edges) {
+			r = Math.max(r, e.from+1);
+			r = Math.max(r, e.to+1);
 		}
 		return r;
 	}

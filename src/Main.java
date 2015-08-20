@@ -31,18 +31,23 @@ public class Main {
 				PeaFindScc1.Recursive r_pscc = new PeaFindScc1.Recursive(graph);
 				PeaFindScc1.Imperative i_pscc = new PeaFindScc1.Imperative(graph);
 				HashSet<Integer>[] r_components = r_pscc.visit();
-				HashSet<Integer>[] i_components = i_pscc.visit();
+				HashSet<Integer>[] i_components = i_pscc.visit();				
+				printComponents(r_components);
+				printComponents(i_components);				
 				if(!Arrays.equals(r_components,i_components)) {
-					System.out.println("*** DIFFERENCE DETECTED!!!");
+					System.out.println("*** DIFFERENCE DETECTED ***");
 				}
-				for (HashSet<Integer> component : r_components) {
-					printComponent(component);
-				}
-				System.out.println();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public static void printComponents(HashSet<Integer>[] components) {
+		for (HashSet<Integer> component : components) {
+			printComponent(component);
+		}				
+		System.out.println();
 	}
 	
 	public static void printComponent(HashSet<Integer> component) {

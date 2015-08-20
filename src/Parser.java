@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 /**
  * Simple input file parser.
  * 
@@ -13,17 +15,17 @@ public class Parser {
 		this.pos = 0;
 	}
 
-	public Digraph parse() {
-		Digraph g = new Digraph();
+	public Digraph parse() {		
+		ArrayList<Digraph.Edge> edges = new ArrayList<Digraph.Edge>();
 		skipWhiteSpace();
 		while (pos < input.length() && !isWhiteSpace(input.charAt(pos))) {
 			int from = parseInt();
 			skipLineSpace();
 			int to = parseInt();
 			skipLineSpace();
-			g.add(from, to);
+			edges.add(new Digraph.Edge(from, to));
 		}
-		return g;
+		return new Digraph(edges);
 	}
 
 	public void match(String r) {
