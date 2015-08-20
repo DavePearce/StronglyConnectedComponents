@@ -1,4 +1,3 @@
-import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Stack;
 
@@ -11,11 +10,12 @@ import java.util.Stack;
  * Directed Graph", Information Processing Letters, David J. Pearce, 2015.
  * 
  * Both a recursive and imperative version of this algorithm are given for
- * completeness.
+ * completeness. These algorithms are not intended to be specifically efficient,
+ * just to provide sample implementations. In particular, I've tried to keep
+ * them as close to the presentation in the paper as possible.
  */
 public class PeaFindScc1 {
 
-	
 	// ==============================================================
 	// Recursive Version
 	// ==============================================================
@@ -35,27 +35,27 @@ public class PeaFindScc1 {
 		@Override
 		public void visit(int v) {
 			boolean root = true;
-			visited.set(v, true);
-			rindex[v] = index++;
-			inComponent.set(v, false);
+			visited[v] = true;
+			rindex[v] = index;
+			index = index + 1;
+			inComponent[v] = false;
 
 			for (int w : graph.edges(v)) {
-				if (!visited.get(w)) {
+				if (!visited[w]) {
 					visit(w);
 				}
-				if (!inComponent.get(w) && rindex[w] < rindex[v]) {
+				if (!inComponent[w] && rindex[w] < rindex[v]) {
 					rindex[v] = rindex[w];
 					root = false;
 				}
 			}
 
 			if (root) {
-				inComponent.set(v, true);
-				int rindex_v = rindex[v];
-				while (!S.isEmpty() && rindex_v <= rindex[S.peek()]) {
+				inComponent[v] = true;
+				while (!S.isEmpty() && rindex[v] <= rindex[S.peek()]) {
 					int w = S.pop();
 					rindex[w] = c;
-					inComponent.set(w, true);
+					inComponent[w] = true;
 				}
 				rindex[v] = c;
 				c = c + 1;
@@ -64,7 +64,7 @@ public class PeaFindScc1 {
 			}
 		}
 	}
-	
+
 	// ==============================================================
 	// Imperative Version
 	// ==============================================================
@@ -76,20 +76,20 @@ public class PeaFindScc1 {
 	 *
 	 */
 	public static class Imperative extends Base {
-		
+
 		public Imperative(Digraph g) {
 			super(g);
 		}
-		
+
 		public void visit(int v) {
-			
+
 		}
 	}
-	
+
 	// ==============================================================
 	// Abstract Base Class
 	// ==============================================================
-	
+
 	/**
 	 * A base class for stashing common code
 	 * 
@@ -98,8 +98,8 @@ public class PeaFindScc1 {
 	 */
 	private static abstract class Base {
 		protected Digraph graph;
-		protected BitSet visited;
-		protected BitSet inComponent;
+		protected boolean[] visited;
+		protected boolean[] inComponent;
 		protected int[] rindex;
 		protected Stack<Integer> S;
 		protected int index;
@@ -107,8 +107,8 @@ public class PeaFindScc1 {
 
 		public Base(Digraph g) {
 			this.graph = g;
-			this.visited = new BitSet(g.size());
-			this.inComponent = new BitSet(g.size());
+			this.visited = new boolean[g.size()];
+			this.inComponent = new boolean[g.size()];
 			this.rindex = new int[g.size()];
 			this.S = new Stack();
 			this.index = 0;
@@ -123,7 +123,7 @@ public class PeaFindScc1 {
 		 */
 		public HashSet<Integer>[] visit() {
 			for (int i = 0; i != graph.size(); ++i) {
-				if (!visited.get(i)) {
+				if (!visited[i]) {
 					visit(i);
 				}
 			}
