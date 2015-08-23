@@ -28,14 +28,26 @@ public class Main {
 			int count = 0;
 			for (Digraph graph : readFile(args[0])) {
 				System.out.println("=== Graph #" + count++ + " ===");
-				PeaFindScc1.Recursive r_pscc = new PeaFindScc1.Recursive(graph);
-				PeaFindScc1.Imperative i_pscc = new PeaFindScc1.Imperative(graph);
-				HashSet<Integer>[] r_components = r_pscc.visit();
-				HashSet<Integer>[] i_components = i_pscc.visit();				
-				printComponents(r_components);
-				printComponents(i_components);				
-				if(!Arrays.equals(r_components,i_components)) {
-					System.out.println("*** DIFFERENCE DETECTED ***");
+				PeaFindScc1.Recursive r_pscc1 = new PeaFindScc1.Recursive(graph);
+				PeaFindScc1.Imperative i_pscc1 = new PeaFindScc1.Imperative(graph);
+				PeaFindScc2.Recursive r_pscc2 = new PeaFindScc2.Recursive(graph);
+				PeaFindScc2.Imperative i_pscc2 = new PeaFindScc2.Imperative(graph);
+				HashSet<Integer>[] r1_components = r_pscc1.visit();
+				HashSet<Integer>[] i1_components = i_pscc1.visit();
+				HashSet<Integer>[] r2_components = r_pscc2.visit();
+				HashSet<Integer>[] i2_components = i_pscc2.visit();
+				printComponents("PEA_FIND_SCC1 (recursive)",r1_components);
+				printComponents("PEA_FIND_SCC1 (imperative)",i1_components);
+				printComponents("PEA_FIND_SCC2 (recursive)",r2_components);
+				printComponents("PEA_FIND_SCC2 (imperative)",i2_components);
+				if(!Arrays.equals(r1_components,i1_components)) {
+					System.out.println("*** Difference detected between PEA_FIND_SCC1(recursive) and PEA_FIND_SCC1(imperative)");
+				}
+				if(!Arrays.equals(r1_components,r2_components)) {
+					System.out.println("*** Difference detected between PEA_FIND_SCC1(recursive) and PEA_FIND_SCC2(recursive)");
+				}
+				if(!Arrays.equals(r1_components,i2_components)) {
+					System.out.println("*** Difference detected between PEA_FIND_SCC1(recursive) and PEA_FIND_SCC2(imperative)");
 				}
 			}
 		} catch (IOException e) {
@@ -43,7 +55,8 @@ public class Main {
 		}
 	}
 	
-	public static void printComponents(HashSet<Integer>[] components) {
+	public static void printComponents(String name, HashSet<Integer>[] components) {
+		System.out.print(name + ": ");
 		for (HashSet<Integer> component : components) {
 			printComponent(component);
 		}				
