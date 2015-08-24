@@ -26,9 +26,11 @@ public class PeaFindScc2 {
 	 *
 	 */
 	public static class Recursive extends Base {
-
+		protected DoubleStack S;
+		
 		public Recursive(Digraph g) {
 			super(g);
+			this.S = new DoubleStack(g.size());             // n words
 		}
 
 		@Override
@@ -49,15 +51,15 @@ public class PeaFindScc2 {
 
 			if (root) {
 				index = index - 1;
-				while (!S.isEmpty() && rindex[v] <= rindex[S.top()]) {
-					int w = S.pop();
+				while (!S.isEmptyFront() && rindex[v] <= rindex[S.topFront()]) {
+					int w = S.popFront();
 					rindex[w] = c;
 					index = index - 1;
 				}
 				rindex[v] = c;
 				c = c - 1;
 			} else {
-				S.push(v);
+				S.pushFront(v);
 			}
 		}
 	}
@@ -73,28 +75,32 @@ public class PeaFindScc2 {
 	 *
 	 */
 	public static class Imperative extends Base {
+		DoubleStack vS;  // vertex stack
+		DoubleStack iS;  // iterator stack
+		boolean[] root;
 		
 		public Imperative(Digraph g) {
 			super(g);
-			
+			vS = new DoubleStack(graph.size());         // n words
+			iS = new DoubleStack(graph.size());         // n words
+			root = new boolean[graph.size()];           // n bits
+			                                  // subtotal: n(1 + 2w) bits
+			                                  //     base:        n words
+			                                  //    total: n(1 + 3w) bits
 		}
 
 		public void visit(int v) {
-			// Represents the call stack			
-			Stack vS = new Stack(graph.size());         // n words
-			Stack iS = new Stack(graph.size());         // n words
-			boolean[] root = new boolean[graph.size()]; // n bits
-			vS.push(v);                          // total: n(1 + 2w) bits
-			iS.push(0);
+			vS.pushFront(v);
+			iS.pushFront(0);
 			
-			while (!vS.isEmpty()) {
+			while (!vS.isEmptyFront()) {
 				visit(vS,iS,root);
 			}
 		}
 		
-		public void visit(Stack vS, Stack iS, boolean[] root) {			
-			int v = vS.top();
-			int i = iS.top();
+		public void visit(DoubleStack vS, DoubleStack iS, boolean[] root) {			
+			int v = vS.topFront();
+			int i = iS.topFront();
 			
 			int[] g_edges = graph.edges(v); 
 			
@@ -119,10 +125,10 @@ public class PeaFindScc2 {
 				if (i < g_edges.length) {
 					int w = g_edges[i];					
 					if (rindex[w] == 0) {
-						iS.pop();
-						iS.push(i+1);
-						vS.push(w);
-						iS.push(0);
+						iS.popFront();
+						iS.pushFront(i+1);
+						vS.pushFront(w);
+						iS.pushFront(0);
 						return;
 					}
 				} 
@@ -132,20 +138,20 @@ public class PeaFindScc2 {
 			// Finished traversing out edges, update component info
 			if (root[v]) {
 				index = index - 1;
-				while (!S.isEmpty() && rindex[v] <= rindex[S.top()]) {
-					int w = S.pop();
+				while (!vS.isEmptyBack() && rindex[v] <= rindex[vS.topBack()]) {
+					int w = vS.popBack();
 					rindex[w] = c;
 					index = index - 1;
 				}
 				rindex[v] = c;
 				c = c - 1;
 			} else {
-				S.push(v);
+				vS.pushBack(v);
 			}					
 
 			// Take this vertex off the stack
-			vS.pop();
-			iS.pop();		
+			vS.popFront();
+			iS.popFront();		
 		}
 	}
 	
@@ -162,15 +168,14 @@ public class PeaFindScc2 {
 	private static abstract class Base {
 		protected Digraph graph;
 		protected int[] rindex;
-		protected Stack S;
+
 		protected int index;
 		protected int c; // component number
 
 		public Base(Digraph g) {
 			this.graph = g;
-			this.rindex = new int[g.size()];          // n words
-			this.S = new Stack(g.size());             // n words
-			this.index = 1;                    // total: 2n words
+			this.rindex = new int[g.size()];          // n words			
+			this.index = 1;                   // total:  n words
 			this.c = g.size() - 1;
 		}
 
@@ -211,17 +216,31 @@ public class PeaFindScc2 {
 	// Stack Implementation
 	// ==============================================================
 	
-	public static class Stack {
+	/**
+	 * Implements two stacks which occupy the same space. This is only safe if
+	 * it is known that one is always smaller than the other, and that their
+	 * combined lengths never exceeds the capacity.
+	 * 
+	 * @author David J. Pearce
+	 *
+	 */
+	public static class DoubleStack {
 		private final int[] items;
-		private int length;
+		private int fp; // front pointer
+		private int bp; // back pointer
 		
-		public Stack(int capacity) {
-			this.length = 0;
+		public DoubleStack(int capacity) {			
+			this.fp = 0;
+			this.bp = capacity;
 			this.items = new int[capacity];
 		}
+
+		// ============================
+		// Front stack
+		// ============================
 		
-		public boolean isEmpty() {
-			return length == 0;
+		public boolean isEmptyFront() {
+			return fp == 0;
 		}
 		
 		/**
@@ -229,8 +248,8 @@ public class PeaFindScc2 {
 		 * 
 		 * @return
 		 */
-		public int top() {
-			return items[length-1];
+		public int topFront() {
+			return items[fp-1];
 		}
 
 		/**
@@ -238,9 +257,9 @@ public class PeaFindScc2 {
 		 * 
 		 * @return
 		 */
-		public int pop() {
-			length = length-1;
-			return items[length];
+		public int popFront() {
+			fp = fp-1;
+			return items[fp];
 		}
 
 		/**
@@ -249,9 +268,46 @@ public class PeaFindScc2 {
 		 * @param item
 		 * @return
 		 */
-		public void push(int item) {
-			items[length] = item;
-			length = length + 1;			
+		public void pushFront(int item) {
+			items[fp] = item;
+			fp = fp + 1;			
+		}
+		
+		// ============================
+		// Back stack
+		// ============================
+		
+		public boolean isEmptyBack() {
+			return bp == items.length;
+		}
+		
+		/**
+		 * Get top item on the stack
+		 * 
+		 * @return
+		 */
+		public int topBack() {
+			return items[bp];
+		}
+
+		/**
+		 * Pop item off stack
+		 * 
+		 * @return
+		 */
+		public int popBack() {			
+			return items[bp++];
+		}
+		
+		/**
+		 * Push an item onto the stack
+		 * 
+		 * @param item
+		 * @return
+		 */
+		public void pushBack(int item) {
+			bp = bp - 1;
+			items[bp] = item;			
 		}
 	}
 	

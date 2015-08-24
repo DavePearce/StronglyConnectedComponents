@@ -75,26 +75,28 @@ public class PeaFindScc1 {
 	 *
 	 */
 	public static class Imperative extends Base {
+		Stack vS;
+		Stack iS;
+		boolean[] root;
 		
 		public Imperative(Digraph g) {
 			super(g);
-			
+			vS = new Stack(graph.size());         // n words
+			iS = new Stack(graph.size());         // n words
+			root = new boolean[graph.size()]; // n bits
 		}
 
 		public void visit(int v) {
 			// Represents the call stack			
-			Stack vS = new Stack(graph.size());         // n words
-			Stack iS = new Stack(graph.size());         // n words
-			boolean[] root = new boolean[graph.size()]; // n bits
 			vS.push(v);                          // total: n(1 + 2w)
 			iS.push(0);
 			
 			while (!vS.isEmpty()) {
-				visit(vS,iS,root);
+				visit(root);
 			}
 		}
 		
-		public void visit(Stack vS, Stack iS, boolean[] root) {			
+		public void visit(boolean[] root) {			
 			int v = vS.top();
 			int i = iS.top();
 			
