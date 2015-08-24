@@ -6,7 +6,7 @@ import java.util.HashSet;
  * this algorithm works:
  * 
  * "An Improved Algorithm for Finding the Strongly Connected Components of a
- * Directed Graph", Information Processing Letters, David J. Pearce, 2015.
+ * Directed Graph", David J. Pearce, 2015.
  * 
  * Both a recursive and imperative version of this algorithm are given for
  * completeness. These algorithms are not intended to be specifically efficient,
@@ -88,8 +88,7 @@ public class PeaFindScc1 {
 
 		public void visit(int v) {
 			// Represents the call stack			
-			vS.push(v);                          // total: n(1 + 2w)
-			iS.push(0);
+			beginVisiting(v);
 			
 			while (!vS.isEmpty()) {
 				visit(root);
@@ -102,39 +101,34 @@ public class PeaFindScc1 {
 			
 			int[] g_edges = graph.edges(v); 
 			
-			if(i == 0) {
-				// First time this node encountered			
-				root[v] = true;
-				visited[v] = true;
-				rindex[v] = index;
-				index = index + 1;
-				inComponent[v] = false;				
-			} 
-			
 			// Continue traversing out-edges until none left.
 			while(i <= g_edges.length){			
 				// Continuation
-				if(i > 0) {
-					// Update status for previously traversed out-edge
-					int ow = g_edges[i-1];
-					if (!inComponent[ow] && rindex[ow] < rindex[v]) {
-						rindex[v] = rindex[ow];
-						root[v] = false;
-					}
-				} 				
-				if (i < g_edges.length) {
-					int w = g_edges[i];					
-					if (!visited[w]) {
-						iS.pop();
-						iS.push(i+1);
-						vS.push(w);
-						iS.push(0);
-						return;
-					}
+				if(i > 0) { finishEdge(v, i); } 				
+				if (i < g_edges.length && beginEdge(v, i)) {
+					return;
 				} 
 				i = i + 1;				
 			}
 			
+			finishVisiting(v);		
+		}
+
+		public void beginVisiting(int v) {
+			// First time this node encountered			
+			vS.push(v);                          // total: n(1 + 2w)
+			iS.push(0);
+			root[v] = true;
+			visited[v] = true;
+			rindex[v] = index;
+			index = index + 1;
+			inComponent[v] = false;
+		}
+		
+		public void finishVisiting(int v) {
+			// Take this vertex off the stack
+			vS.pop();
+			iS.pop();
 			// Finished traversing out edges, update component info
 			if (root[v]) {
 				inComponent[v] = true;
@@ -148,11 +142,31 @@ public class PeaFindScc1 {
 			} else {
 				S.push(v);
 			}					
-
-			// Take this vertex off the stack
-			vS.pop();
-			iS.pop();		
 		}
+
+		public boolean beginEdge(int v, int i) {
+			int[] g_edges = graph.edges(v);
+			int w = g_edges[i];					
+			if (!visited[w]) {
+				iS.pop();
+				iS.push(i+1);
+				beginVisiting(w);
+				return true;
+			} else {
+				return false;
+			}
+		}
+
+		public void finishEdge(int v, int k) {
+			int[] g_edges = graph.edges(v); 
+			// Update status for previously traversed out-edge
+			int w = g_edges[k-1];
+			if (!inComponent[w] && rindex[w] < rindex[v]) {
+				rindex[v] = rindex[w];
+				root[v] = false;
+			}
+		}
+
 	}
 	
 	// ==============================================================
