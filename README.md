@@ -10,4 +10,4 @@ Both a recursive and imperative version of this algorithm are given for complete
 
 * A preprint version of the paper can be obtained <a href="http://homepages.ecs.vuw.ac.nz/~djp/files/P05.pdf">here</a>.
 
-* A nice blog article of the algorithm can be found <a href="http://www.timl.id.au/?p=327">here</a>.
+* A nice blog article of the algorithm can be found <a href="http://timl.id.au/SCC/">here</a>.
